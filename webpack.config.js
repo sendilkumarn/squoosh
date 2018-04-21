@@ -14,6 +14,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
+const FileSizePlugin = require('./config/filesize-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 function readJson (filename) {
@@ -223,6 +224,8 @@ module.exports = function (_, env) {
         { from: 'src/manifest.json', to: 'manifest.json' },
         { from: 'src/assets', to: 'assets' }
       ]),
+
+      new FileSizePlugin(),
 
       // For production builds, output module size analysis to build/report.html
       isProd && new BundleAnalyzerPlugin({
