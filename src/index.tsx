@@ -15,9 +15,11 @@ if (process.env.NODE_ENV === 'development') {
   require('preact/debug');
 
   // When an update to any module is received, re-import the app and trigger a full re-render:
-  module.hot.accept('./components/app', () => {
-    import('./components/app').then(({ default: App }) => {
-      root = render(<App />, document.body, root);
+  if (module.hot) {
+    module.hot.accept('./components/app', () => {
+      import('./components/app').then(({ default: App }) => {
+        root = render(<App />, document.body, root);
+      });
     });
-  });
+  }
 }

@@ -4,12 +4,13 @@ import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
 
-import {MozJpegEncoder} from '../../lib/codec-wrappers/mozjpeg-enc';
+const MozJpegEncoder = require('../../lib/jpeg.worker');
 
 type Props = {};
 
 type State = {
   sourceImg?: ImageBitmap,
+  sourceData?: ImageData,
   img?: ImageBitmap,
   loading: boolean
   options: any
@@ -25,7 +26,9 @@ export default class App extends Component<Props, State> {
 
   compressCounter = 0;
 
-  encoding = false;
+  encoders = {
+    jpeg: new MozJpegEncoder()
+  };
 
   constructor() {
     super();
@@ -49,13 +52,8 @@ export default class App extends Component<Props, State> {
   @bind
   optionsUpdated() {
     this.optionsUpdateTimer = null;
-    if (this.state.sourceImg) {
-      // hack: encoding 2 images at once seems to crash.
-      if (this.encoding) {
-        this.optionsUpdateTimer = setTimeout(this.optionsUpdated, 500);
-        return;
-      }
-      this.updateCompressedImage(this.state.sourceImg);
+    if (this.state.sourceData) {
+      this.updateCompressedImage(this.state.sourceData);
     }
   }
 
@@ -66,22 +64,20 @@ export default class App extends Component<Props, State> {
     if (!fileInput.files || !fileInput.files[0]) return;
     // TODO: handle decode error
     const bitmap = await createImageBitmap(fileInput.files[0]);
-    this.setState({ sourceImg: bitmap, loading: false });
-    this.updateCompressedImage(bitmap);
+    // compute the corresponding ImageData once since it only changes when the file changes:
+    const sourceData = await bitmapToImageData(bitmap);
+    this.setState({ sourceImg: bitmap, sourceData, loading: false });
+    this.updateCompressedImage(sourceData);
   }
 
-  async updateCompressedImage(bitmap: ImageBitmap) {
+  async updateCompressedImage(sourceData: ImageData) {
     const id = ++this.compressCounter;
-    this.encoding = true;
     this.setState({ loading: true });
-    const data = await bitmapToImageData(bitmap);
-    const encoder = new MozJpegEncoder();
-    const compressedData = await encoder.encode(data, this.state.options);
+    const compressedData = await this.encoders.jpeg.encode(sourceData, this.state.options);
     const blob = new Blob([compressedData], {type: 'image/jpeg'});
     const compressedImage = await createImageBitmap(blob);
     // if another compression started, ignore this one
     if (this.compressCounter!==id) return;
-    this.encoding = false;
     this.setState({ img: compressedImage, loading: false });
   }
 

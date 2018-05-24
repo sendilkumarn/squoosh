@@ -100,27 +100,33 @@ module.exports = function (_, env) {
         {
           test: /\.tsx?$/,
           exclude: nodeModules,
-          loader: 'ts-loader'
+          loader: 'ts-loader',
+          enforce: 'pre'
         },
         {
           test: /\.jsx?$/,
           loader: 'babel-loader',
+          enforce: 'pre',
           // Don't respect any Babel RC files found on the filesystem:
           options: Object.assign(readJson('.babelrc'), { babelrc: false })
         },
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
           test: /\/codecs\/.*\.js$/,
-          loader: 'exports-loader',
+          loader: 'exports-loader'
         },
         {
           test: /\/codecs\/.*\.wasm$/,
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
-          loader: 'file-loader',
+          loader: 'file-loader'
+        },
+        {
+          test: /\.worker\.(js|ts)x?$/,
+          loader: 'workerize-loader'
         }
-      ],
+      ]
     },
     plugins: [
       new webpack.IgnorePlugin(/(fs)/, /\/codecs\//),
