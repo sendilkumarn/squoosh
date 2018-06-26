@@ -12,14 +12,23 @@ export type ImageType = 'original' | 'MozJpeg';
 
 export type CodecOptions = IdentityEncodeOptions | MozJpegEncodeOptions;
 
-const ENCODERS = {
+interface EncoderDescription {
+  name: string;
+  encoder: new () => Encoder<CodecOptions>;
+}
+
+interface EncoderDescriptionMap {
+  [key: string]: EncoderDescription;
+}
+
+const ENCODERS: EncoderDescriptionMap = {
   original: {
-    encoder: IdentityEncoder,
-    name: 'Original Image'
+    name: 'Original Image',
+    encoder: IdentityEncoder
   },
   MozJpeg: {
-    encoder: MozJpegEncoder,
-    name: 'JPEG'
+    name: 'JPEG',
+    encoder: MozJpegEncoder
   }
 };
 
@@ -136,12 +145,12 @@ export default class App extends Component<Props, State> {
 
   async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
     try {
-      const encoder = await new ENCODERS[type]() as Encoder<CodecOptions>;
+      const encoder = await new ENCODERS[type].encoder() as Encoder<CodecOptions>;
       const compressedData = await encoder.encode(sourceData, options);
       let imageData;
       if (compressedData instanceof ArrayBuffer) {
         imageData = new Blob([compressedData], {
-          type: ENCODERS[type].mimeType || ''
+          type: ENCODERS[type].encoder.mimeType || ''
         });
       } else {
         imageData = compressedData;
@@ -170,7 +179,7 @@ export default class App extends Component<Props, State> {
           </div>
         )}
         {images.map((image, index: number) => (
-          <span class={index ? style.rightLabel : style.leftLabel}>{ENCODER_NAMES[image.type]}</span>
+          <span class={index ? style.rightLabel : style.leftLabel}>{ENCODERS[image.type].name}</span>
         ))}
         {images.map((image, index: number) => (
           <Options
