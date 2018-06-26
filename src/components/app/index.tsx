@@ -12,34 +12,47 @@ export type ImageType = 'original' | 'MozJpeg';
 
 export type CodecOptions = IdentityEncodeOptions | MozJpegEncodeOptions;
 
-const ENCODER_NAMES = {
-  original: 'Original Image',
-  MozJpeg: 'JPEG'
-};
-
 const ENCODERS = {
-  original: IdentityEncoder,
-  MozJpeg: MozJpegEncoder
+  original: {
+    encoder: IdentityEncoder,
+    name: 'Original Image'
+  },
+  MozJpeg: {
+    encoder: MozJpegEncoder,
+    name: 'JPEG'
+  }
 };
 
-type Image = {
-  type: ImageType,
-  options: CodecOptions,
-  data?: ImageBitmap,
-  counter: number,
-  loading: boolean
-};
+/** Represents an encoded version of sourceFile */
+interface Image {
+  /** The encoding type for this image view */
+  type: ImageType;
+  /** Configured option values for the encoder */
+  options: CodecOptions;
+  /** Resulting encoded image data */
+  data?: ImageBitmap;
+  /** Each encode of an image increments this counter, invalidating any pending previous encodes. */
+  counter: number;
+  /** Indicates encoding or other processing is  */
+  loading: boolean;
+}
 
-type Props = {};
+interface Props {}
 
-type State = {
-  sourceFile?: File,
-  sourceImg?: ImageBitmap,
-  sourceData?: ImageData,
-  images: Array<Image>,
-  loading: boolean,
-  error?: string
-};
+interface State {
+  /** The dropped/selected file we're encoding */
+  sourceFile?: File;
+  /** Extracted bitmap from sourceFile */
+  sourceImg?: ImageBitmap;
+  /** Extracted raw image data from sourceFile */
+  sourceData?: ImageData;
+  /** Encoded image versions to display */
+  images: Array<Image>;
+  /** Indicates sourceFile is being loaded/decoded */
+  loading: boolean;
+  /** Any global error, such as an image decoding error */
+  error?: string;
+}
 
 export default class App extends Component<Props, State> {
   state: State = {
