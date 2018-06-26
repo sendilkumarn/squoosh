@@ -5,12 +5,12 @@ import Output from '../output';
 import Options from '../options';
 
 import { Encoder } from '../../codecs/codec';
-import IdentityEncoder from '../../codecs/identity/encoder';
-import MozJpegEncoder from '../../codecs/mozjpeg/encoder.worker';
+import IdentityEncoder, { EncodeOptions as IdentityEncodeOptions } from '../../codecs/identity/encoder';
+import MozJpegEncoder, { EncodeOptions as MozJpegEncodeOptions } from '../../codecs/mozjpeg/encoder.worker';
 
 export type ImageType = 'original' | 'MozJpeg';
 
-export type CodecOptions = any;
+export type CodecOptions = IdentityEncodeOptions | MozJpegEncodeOptions;
 
 const ENCODER_NAMES = {
   original: 'Original Image',
@@ -123,7 +123,7 @@ export default class App extends Component<Props, State> {
 
   async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
     try {
-      const encoder = await new ENCODERS[type]() as Encoder;
+      const encoder = await new ENCODERS[type]() as Encoder<CodecOptions>;
       const compressedData = await encoder.encode(sourceData, options);
       let imageData;
       if (compressedData instanceof ArrayBuffer) {

@@ -15,7 +15,7 @@ interface ModuleAPI {
   get_result_size(): number;
 }
 
-type EncodeOptions = {
+export type EncodeOptions = {
   quality?: number
 };
 

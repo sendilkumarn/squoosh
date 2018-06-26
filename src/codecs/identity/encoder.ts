@@ -1,6 +1,6 @@
 import { Encoder } from '../codec';
 
-type EncodeOptions = {};
+export type EncodeOptions = {};
 
 export default class IdentityEncoder implements Encoder<EncodeOptions> {
   static mimeType = null;
