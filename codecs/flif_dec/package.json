@@ -1,0 +1,13 @@
+{
+  "name": "flif_dec",
+  "scripts": {
+    "install": "napa",
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc -O3 --bind -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"flif_dec\"' -o ./flif_dec.js flif_dec.cpp"
+  },
+  "napa": {
+    "flif": "FLIF-hub/FLIF#v0.3"
+  },
+  "devDependencies": {
+    "napa": "^3.0.0"
+  }
+}
