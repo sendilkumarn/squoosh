@@ -72,14 +72,14 @@ export default class Output extends Component<Props, State> {
   zoomIn() {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
-    this.pinchZoomLeft.scaleTo(Math.min(this.state.scale * 1.25, 100), scaleToOpts);
+    this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
   }
 
   @bind
   zoomOut() {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
-    this.pinchZoomLeft.scaleTo(Math.max(this.state.scale / 1.25, 0.0001), scaleToOpts);
+    this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   }
 
   @bind

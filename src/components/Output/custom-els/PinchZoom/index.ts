@@ -77,6 +77,8 @@ function createPoint(): SVGPoint {
   return getSVG().createSVGPoint();
 }
 
+const MIN_SCALE = 0.01;
+
 export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
   // Ideally this would be shadow DOM, but we don't have the browser
@@ -237,6 +239,9 @@ export default class PinchZoom extends HTMLElement {
    * Update transform values without checking bounds. This is only called in setTransform.
    */
   _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
+    // Avoid scaling to zero
+    if (scale < MIN_SCALE) return;
+
     // Return if there's no change
     if (
       scale === this.scale &&
