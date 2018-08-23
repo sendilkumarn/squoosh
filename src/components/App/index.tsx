@@ -8,6 +8,7 @@ import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
 import * as quantizer from '../../codecs/imagequant/quantizer';
+import * as resizer from '../../codecs/resize/resize';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
@@ -77,6 +78,9 @@ async function preprocessImage(
   preprocessData: PreprocessorState,
 ): Promise<ImageData> {
   let result = source.data;
+  if (preprocessData.resize.enabled) {
+    result = await resizer.quantize(result, preprocessData.resize);
+  }
   if (preprocessData.quantizer.enabled) {
     result = await quantizer.quantize(result, preprocessData.quantizer);
   }
@@ -223,10 +227,21 @@ export default class App extends Component<Props, State> {
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
 
-      this.setState({
+      let newState = {
+        ...this.state,
         source: { data, bmp, file },
         loading: false,
-      });
+      };
+
+      // Default resize values come from the image:
+      for (const i of [0, 1]) {
+        newState = cleanMerge(newState, `images.${i}.preprocessorState.resize`, {
+          width: data.width,
+          height: data.height,
+        });
+      }
+
+      this.setState(newState);
     } catch (err) {
       console.error(err);
       this.showError(`Invalid image`);
@@ -298,17 +313,22 @@ export default class App extends Component<Props, State> {
   }
 
   render({ }: Props, { loading, images, source, orientation }: State) {
+    const [leftImage, rightImage] = images;
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
         <div id="app" class={`${style.app} ${style[orientation]}`}>
-          {(leftImageBmp && rightImageBmp) ? (
+          {(leftImageBmp && rightImageBmp && source) ? (
             <Output
               orientation={orientation}
+              imgWidth={source.bmp.width}
+              imgHeight={source.bmp.height}
               leftImg={leftImageBmp}
               rightImg={rightImageBmp}
+              leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
+              rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
             />
           ) : (
             <div class={style.welcome}>
@@ -316,9 +336,10 @@ export default class App extends Component<Props, State> {
               <input type="file" onChange={this.onFileChange} />
             </div>
           )}
-          {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
+          {(leftImageBmp && rightImageBmp && source) && images.map((image, index) => (
             <Options
               orientation={orientation}
+              sourceAspect={source.bmp.width / source.bmp.height}
               imageIndex={index}
               imageFile={image.file}
               sourceImageFile={source && source.file}
